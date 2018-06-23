@@ -5,13 +5,10 @@ module Node.Coroutines
 
 import Prelude
 
+import Effect.Aff (makeAff, nonCanceler)
+import Effect.Aff.Class (class MonadAff, liftAff)
 import Control.Coroutine (Consumer, Producer, await)
-import Control.Coroutine.Aff (produce')
-import Control.Monad.Aff (makeAff)
-import Control.Monad.Aff.AVar (AVAR)
-import Control.Monad.Aff.Class (class MonadAff, liftAff)
-import Control.Monad.Eff.Console (CONSOLE)
-import Control.Monad.Eff.Exception (EXCEPTION)
+import Control.Coroutine.Aff (close, emit, produce')
 import Control.Monad.Rec.Class (forever)
 import Control.Monad.Trans.Class (lift)
 import Data.Either (Either(..))
@@ -21,38 +18,25 @@ import Node.Stream (Writable, Readable, onClose, onDataString, writeString)
 -- | A `Producer` which produces `String`s by reading them from
 -- | some `Readable` stream.
 readable
-  :: forall aff r p
-   . MonadAff ( avar :: AVAR
-              , console :: CONSOLE
-              , exception :: EXCEPTION
-              | r
-              ) aff
+  :: forall aff p
+   . MonadAff aff
   => Encoding
-  -> Readable p ( avar :: AVAR
-                , console :: CONSOLE
-                , exception :: EXCEPTION
-                | r
-                )
+  -> Readable p 
   -> Producer String aff Unit
 readable enc s = produce' \k -> do
-  onDataString s enc (k <<< Left)
-  onClose s (k (Right unit))
+  onDataString s enc (emit k)
+  onClose s (close k unit)
 
 -- | A `Consumer` which consumes `String`s by sending them to
 -- | a `Writable` stream.
 writable
-  :: forall aff r p a
-   . MonadAff ( console :: CONSOLE
-              , exception :: EXCEPTION
-              | r
-              ) aff
+  :: forall aff p a
+   . MonadAff aff
   => Encoding
-  -> Writable p  ( console :: CONSOLE
-                , exception :: EXCEPTION
-                | r
-                )
+  -> Writable p
   -> Consumer String aff a
 writable enc w = forever do
   s <- await
-  lift (liftAff (makeAff \_ k ->
-    void (writeString w enc s (k unit))))
+  lift (liftAff (makeAff \k -> do
+    void (writeString w enc s (k (Right unit)))
+    pure nonCanceler))

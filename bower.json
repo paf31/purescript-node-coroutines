@@ -12,10 +12,12 @@
     "url": "git://github.com/paf31/purescript-node-coroutines.git"
   },
   "dependencies": {
-    "purescript-node-streams": "^3.1.0",
-    "purescript-aff-coroutines": "^5.0.0"
+    "purescript-node-streams": "^4.0.0",
+    "purescript-aff-coroutines": "^7.0.0",
+    "purescript-avar": "^3.0.0"
   },
   "devDependencies": {
-    "purescript-node-process": "^5.0.0"
+    "purescript-node-process": "^6.0.0",
+    "purescript-strings": "^4.0.0"
   }
 }
