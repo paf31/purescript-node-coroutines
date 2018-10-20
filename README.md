@@ -3,4 +3,4 @@
 Coroutines for working with Node streams
 
 - [Module Documentation](generated-docs/)
-- [Example](test/Main.purs)
+- [Example](example/Main.purs)
